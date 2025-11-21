@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Order Execution Engine</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    #log {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      font-family: Consolas, monospace;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 8px;
+      margin: 5px;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Order Execution Engine Client</h1>
+
+  <div class="box">
+    <h2>Create Order</h2>
+    <input id="tokenIn" placeholder="tokenIn (e.g., SOL)" />
+    <input id="tokenOut" placeholder="tokenOut (e.g., USDC)" />
+    <input id="amount" placeholder="Amount (e.g., 1.5)" />
+    <input id="side" placeholder="Side (buy/sell)" />
+
+    <br><br>
+    <button onclick="createOrder()">Submit Order</button>
+
+    <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+  </div>
+
+  <div class="box">
+    <h2>WebSocket Order Updates</h2>
+    <div id="log">Waiting for WebSocket messages...</div>
+  </div>
+
+  <script>
+    async function createOrder() {
+      const tokenIn = document.getElementById("tokenIn").value;
+      const tokenOut = document.getElementById("tokenOut").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const side = document.getElementById("side").value;
+
+      const body = { tokenIn, tokenOut, amount, side };
+
+      const res = await fetch("http://localhost:3000/api/orders/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      document.getElementById("orderId").textContent = data.orderId;
+
+      connectWebSocket(data.orderId);
+    }
+
+    function connectWebSocket(orderId) {
+      const log = document.getElementById("log");
+      log.innerHTML += "\nConnecting WebSocket...\n";
+
+      const ws = new WebSocket(`ws://localhost:3000/ws/orders/${orderId}`);
+
+      ws.onopen = () => {
+        log.innerHTML += "WebSocket connected.\n";
+      };
+
+      ws.onmessage = (msg) => {
+        const data = JSON.parse(msg.data);
+        log.innerHTML += `> ${JSON.stringify(data)}\n`;
+        log.scrollTop = log.scrollHeight;
+      };
+
+      ws.onclose = () => {
+  log.innerHTML += "WebSocket closed by server.\n";
+};
+
+    }
+  </script>
+
+</body>
+</html>
