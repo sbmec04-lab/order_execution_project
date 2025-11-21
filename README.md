@@ -105,3 +105,13 @@ src/
 │── types.ts            → TypeScript types
 │── dexRouter.ts        → Mock Raydium/Meteora routers
 client.html             → Simple frontend UI
+
+
+🔧 Tech Stack
+Layer	Technology
+Server	Fastify (TypeScript)
+Background Jobs	BullMQ
+Queue Backend	Redis
+Database	PostgreSQL (Neon)
+Realtime	WebSocket
+UI	HTML + JS
